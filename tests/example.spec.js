@@ -21,10 +21,16 @@ test("ofbusiness login", async ({ browser }) => {
     .click();
   await page.getByRole("link", { name: "abs ABS" }).click();
 
-  let pageNumber = 1;
+  await page.waitForTimeout(3000);
 
-  do {
-    // Extract data from the current page
+  const pages = await page.$eval(
+    ".Pagination__ofbPagination--sKVuL li:nth-last-child(2)",
+    (element) => {
+      return element.textContent?.trim();
+    }
+  );
+
+  while (pages > 0) {
     const data = [];
     const elements = await page.$$(".tableRow");
 
@@ -39,29 +45,10 @@ test("ofbusiness login", async ({ browser }) => {
 
       data.push(rowData);
     }
-
-    // Log data for the current page
-    console.log("Page:", pageNumber);
-    console.log(JSON.stringify(data, null, 2));
-
-    // Navigate to the next page if available
-    const nextButton = await page.waitForSelector('.next a:has-text("next")', {
-      state: "visible",
-    });
-
-    if (nextButton) {
-      await Promise.all([nextButton.click(), page.waitForLoadState("load")]);
-
-      await page.waitForTimeout(3000);
-
-      pageNumber++;
-      data.length = 0;
-    } else {
-      // Exit the loop if there is no next button
-      console.log("All Pages done");
-      break;
-    }
-  } while (true);
+    const nextButton = await page.$('.next a:has-text("Next")');
+    nextButton?.click();
+    console.log(data);
+  }
 
   await browser.close();
 });
